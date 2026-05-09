@@ -1,0 +1,39 @@
+<view class="container">
+  <view class="header">
+    <text class="logo">&#9889;</text>
+    <text class="title">{{station.name}}</text>
+  </view>
+
+  <view class="info-grid" wx:if="{{station}}">
+    <view class="info-item">
+      <text class="label">装机容量</text>
+      <text class="value">{{station.capacity}}</text>
+    </view>
+    <view class="info-item">
+      <text class="label">电站类型</text>
+      <text class="value">{{station.type || '未知'}}</text>
+    </view>
+    <view class="info-item">
+      <text class="label">省份</text>
+      <text class="value">{{station.province}}</text>
+    </view>
+    <view class="info-item">
+      <text class="label">城市</text>
+      <text class="value">{{station.city}}</text>
+    </view>
+    <view class="info-item">
+      <text class="label">区县</text>
+      <text class="value">{{station.county}}</text>
+    </view>
+  </view>
+
+  <view class="contact-section" wx:if="{{station && station.contact_name}}">
+    <text class="section-title">联系信息</text>
+    <view class="contact-row">联系人: {{station.contact_name}}</view>
+    <view class="contact-row phone-link" wx:if="{{station.contact_phone}}" bindtap="makeCall">
+      &#128222; {{station.contact_phone}} (点击拨打)
+    </view>
+  </view>
+
+  <button class="btn-navigate" bindtap="navigateToStation">&#128666; 导航前往</button>
+</view>

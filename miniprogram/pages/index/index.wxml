@@ -1,0 +1,131 @@
+<view class="container">
+  <!-- Header -->
+  <view class="header">
+    <text class="logo">&#9889;</text>
+    <view>
+      <text class="title">全国小水电站地图查询</text>
+      <text class="subtitle">显示附近的水电站</text>
+    </view>
+  </view>
+
+  <!-- Status bar -->
+  <view class="status-bar">
+    <button class="btn btn-primary" bindtap="locateUser">&#128205; 获取我的位置</button>
+    <button class="btn btn-secondary" bindtap="resetMap">&#128260; 重置地图</button>
+    <view class="status">
+      <view class="dot {{locActive ? '' : 'off'}}"></view>
+      <text>{{locText}}</text>
+    </view>
+    <view class="status">
+      <text>附近: {{nearbyCount}} / 共: {{totalCount}}</text>
+    </view>
+  </view>
+
+  <!-- Filter bar -->
+  <view class="filter-bar">
+    <input class="search-input" placeholder="输入电站名称..." value="{{searchInput}}" bindinput="onSearchInput" />
+    <button class="btn-search" bindtap="doSearch">搜索</button>
+    <button class="btn-clear" bindtap="clearFilter">清除</button>
+  </view>
+
+  <!-- Advanced filter toggle -->
+  <view class="filter-toggle" bindtap="toggleFilter">
+    <text>{{showFilter ? '收起筛选' : '高级筛选'}} {{showFilter ? '&#9650;' : '&#9660;'}}</text>
+  </view>
+
+  <!-- Filter panel (expandable) -->
+  <view class="filter-panel" wx:if="{{showFilter}}">
+    <picker mode="selector" range="{{provinceList}}" value="{{selectedProvince ? provinceList.indexOf(selectedProvince) : ''}}" bindchange="onProvinceChange">
+      <view class="picker-item">省份: {{selectedProvince || '全部'}}</view>
+    </picker>
+    <picker mode="selector" range="{{cityList}}" value="{{selectedCity ? cityList.indexOf(selectedCity) : ''}}" bindchange="onCityChange">
+      <view class="picker-item">市: {{selectedCity || '全部'}}</view>
+    </picker>
+    <picker mode="selector" range="{{countyList}}" value="{{selectedCounty ? countyList.indexOf(selectedCounty) : ''}}" bindchange="onCountyChange">
+      <view class="picker-item">县: {{selectedCounty || '全部'}}</view>
+    </picker>
+
+    <view class="radius-row">
+      <text>搜索半径:</text>
+      <input type="number" value="{{radius}}" bindinput="onRadiusInput" style="width:80px;" />
+      <text>公里</text>
+      <button class="btn-apply" bindtap="applyRadius">刷新</button>
+    </view>
+  </view>
+
+  <!-- Map -->
+  <map id="stationMap"
+       class="map"
+       latitude="{{userMarker ? userMarker.latitude : 35.0}}"
+       longitude="{{userMarker ? userMarker.longitude : 105.0}}"
+       scale="12"
+       markers="{{markers}}"
+       show-location="{{true}}"
+       enable-zoom="{{true}}"
+       bindmarkertap="onMarkerTap">
+  </map>
+
+  <!-- Detail panel -->
+  <view class="detail-panel {{showDetail ? 'active' : ''}}">
+    <view class="panel-header">
+      <text class="station-name">{{detailStation.name}}</text>
+      <text class="close-btn" bindtap="closeDetail">&#10005;</text>
+    </view>
+
+    <view class="info-grid" wx:if="{{detailStation}}">
+      <view class="info-item">
+        <text class="label">装机容量</text>
+        <text class="value">{{detailStation.capacity}}</text>
+      </view>
+      <view class="info-item">
+        <text class="label">电站类型</text>
+        <text class="value">{{detailStation.type || '未知'}}</text>
+      </view>
+      <view class="info-item">
+        <text class="label">省份</text>
+        <text class="value">{{detailStation.province}}</text>
+      </view>
+      <view class="info-item">
+        <text class="label">城市</text>
+        <text class="value">{{detailStation.city}}</text>
+      </view>
+      <view class="info-item">
+        <text class="label">区县</text>
+        <text class="value">{{detailStation.county}}</text>
+      </view>
+      <view class="info-item">
+        <text class="label">距离</text>
+        <text class="value">{{detailStation.distance}} km</text>
+      </view>
+    </view>
+
+    <!-- Contact info -->
+    <view class="contact-section" wx:if="{{detailStation && detailStation.contact_name}}">
+      <text class="section-title">联系信息</text>
+      <view class="contact-row">
+        <text>联系人: {{detailStation.contact_name}}</text>
+      </view>
+      <view class="contact-row" wx:if="{{detailStation.contact_phone}}" bindtap="makeCall" data-phone="{{detailStation.contact_phone}}">
+        <text class="phone-link">&#128222; {{detailStation.contact_phone}}</text>
+      </view>
+    </view>
+
+    <!-- Action buttons -->
+    <view class="action-buttons">
+      <button class="btn-navigate" bindtap="navigateToStation">&#128666; 导航前往</button>
+    </view>
+  </view>
+
+  <!-- Legend -->
+  <view class="legend">
+    <text class="legend-title">图例</text>
+    <view class="legend-item">
+      <view class="legend-icon station"></view>
+      <text>附近水电站</text>
+    </view>
+    <view class="legend-item">
+      <view class="legend-icon user"></view>
+      <text>我的位置</text>
+    </view>
+  </view>
+</view>
