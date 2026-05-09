@@ -9,7 +9,7 @@ App({
   onLaunch() {
     // Load station data using require (synchronous, works for local JSON)
     try {
-      const raw = require('./data/stations.js');
+      const raw = require('data/stations.js');
       this.globalData.allStations = raw.map(function(s) {
         return {
           id: s.id,
