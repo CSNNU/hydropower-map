@@ -7,11 +7,9 @@ App({
   },
 
   onLaunch() {
-    // Load station data from local file
-    const fs = wx.getFileSystemManager();
+    // Load station data using require (synchronous, works for local JSON)
     try {
-      const content = fs.readFileSync('data/stations.json');
-      const raw = JSON.parse(content);
+      const raw = require('./data/stations.js');
       this.globalData.allStations = raw.map(function(s) {
         return {
           id: s.id,
@@ -33,7 +31,6 @@ App({
     }
   },
 
-  // Haversine distance calculation
   calcDistance(lat1, lng1, lat2, lng2) {
     var R = 6371;
     var dLat = (lat2 - lat1) * Math.PI / 180;

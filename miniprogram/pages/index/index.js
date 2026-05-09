@@ -294,9 +294,12 @@ Page({
 
   // Reset map view
   resetMap() {
-    this.mapCtx.setCenterLatitude(35.0);
-    this.mapCtx.setCenterLongitude(105.0);
-    this.mapCtx.setZoom(5);
+    this.setData({
+      markers: [],
+      userMarker: null,
+      nearbyCount: 0
+    });
+    wx.showToast({ title: '地图已重置', icon: 'none' });
   },
 
   // Call phone
