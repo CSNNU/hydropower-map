@@ -57,7 +57,7 @@ module.exports = {
   // Load a single province file
   loadProvince(name, fileName) {
     try {
-      var stations = require('./provinces/' + fileName + '.js');
+      var stations = require('/data/provinces/' + fileName + '.js');
       this.allStations = this.allStations.concat(stations);
       this.loadedProvinces[name] = true;
       console.log('[DataLoader] Loaded ' + name + ': ' + stations.length + ' stations (total: ' + this.allStations.length + ')');
