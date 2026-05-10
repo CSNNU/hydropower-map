@@ -17,23 +17,21 @@ Page({
     showDetail: false,
     detailStation: null,
     locText: '未定位',
-    locActive: false
+    locActive: false,
+    userLat: null,
+    userLng: null,
+    loading: true,
+    loadedCount: 0
   },
 
   onLoad() {
     const app = getApp();
-    this.setData({
-      totalCount: app.globalData.allStations.length,
-      filteredStations: app.globalData.allStations.slice()
-    });
+    this.refreshData();
 
-    // Build province list
-    var provinces = [];
-    app.globalData.allStations.forEach(function(s) {
-      if (s.province && provinces.indexOf(s.province) === -1) provinces.push(s.province);
+    // Register callback for when data becomes ready/updated
+    app.onDataReady(() => {
+      this.refreshData();
     });
-    provinces.sort();
-    this.setData({ provinceList: provinces });
 
     // Auto locate user on load
     wx.getLocation({
@@ -43,8 +41,14 @@ Page({
         app.globalData.userLng = res.longitude;
         this.setData({
           locText: '已定位 (' + res.latitude.toFixed(4) + ', ' + res.longitude.toFixed(4) + ')',
-          locActive: true
+          locActive: true,
+          userLat: res.latitude,
+          userLng: res.longitude
         });
+
+        // Trigger progressive loading based on location
+        app.onDataLoadedWithLocation(res.latitude, res.longitude);
+
         this.drawNearby();
       },
       fail: (err) => {
@@ -58,6 +62,29 @@ Page({
     this.mapCtx = wx.createMapContext('stationMap');
   },
 
+  // Refresh data from app globalData (called when data loads/updates)
+  refreshData() {
+    const app = getApp();
+    var allStations = app.globalData.allStations;
+
+    if (!allStations || allStations.length === 0) return;
+
+    // Build province list
+    var provinces = [];
+    allStations.forEach(function(s) {
+      if (s.province && provinces.indexOf(s.province) === -1) provinces.push(s.province);
+    });
+    provinces.sort();
+
+    this.setData({
+      totalCount: allStations.length,
+      filteredStations: allStations.slice(),
+      provinceList: provinces,
+      loading: false,
+      loadedCount: allStations.length
+    });
+  },
+
   // Get user location manually
   locateUser() {
     const app = getApp();
@@ -69,6 +96,8 @@ Page({
         this.setData({
           locText: '已定位 (' + res.latitude.toFixed(4) + ', ' + res.longitude.toFixed(4) + ')',
           locActive: true,
+          userLat: res.latitude,
+          userLng: res.longitude,
           userMarker: {
             id: 0,
             latitude: res.latitude,
@@ -211,6 +240,7 @@ Page({
   onCityChange(e) {
     var idx = parseInt(e.detail.value);
     var city = this.data.cityList[idx] || '';
+    var self = this;
     this.setData({ selectedCity: city, selectedCounty: '' });
 
     // Build county list for selected city
@@ -218,7 +248,7 @@ Page({
     const app = getApp();
     if (city) {
       app.globalData.allStations.forEach(function(s) {
-        if (s.province === this.data.selectedProvince && s.city === city && s.county && counties.indexOf(s.county) === -1) counties.push(s.county);
+        if (s.province === self.data.selectedProvince && s.city === city && s.county && counties.indexOf(s.county) === -1) counties.push(s.county);
       });
     }
     counties.sort();

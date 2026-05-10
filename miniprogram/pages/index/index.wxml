@@ -4,8 +4,15 @@
     <text class="logo">&#9889;</text>
     <view>
       <text class="title">全国小水电站地图查询</text>
-      <text class="subtitle">显示附近的水电站</text>
+      <text class="subtitle">{{loading ? '正在加载数据...' : ('显示附近的水电站 (已加载: ' + loadedCount + ')' )}}</text>
     </view>
+  </view>
+
+  <!-- Loading overlay -->
+  <view class="loading-overlay" wx:if="{{loading}}">
+    <view class="loading-spinner"></view>
+    <text class="loading-text">正在加载电站数据...</text>
+    <text class="loading-hint">首次加载可能需要几秒钟</text>
   </view>
 
   <!-- Status bar -->
@@ -56,8 +63,8 @@
   <!-- Map -->
   <map id="stationMap"
        class="map"
-       latitude="{{userMarker ? userMarker.latitude : 35.0}}"
-       longitude="{{userMarker ? userMarker.longitude : 105.0}}"
+       latitude="{{userLat || 35.0}}"
+       longitude="{{userLng || 105.0}}"
        scale="12"
        markers="{{markers}}"
        show-location="{{true}}"
