@@ -9,7 +9,7 @@ module.exports = {
   // Initialize - load the index file first (small)
   init() {
     try {
-      this.provinceIndex = require('data/provinces/index.js');
+      this.provinceIndex = require('./provinces/index.js');
       console.log('[DataLoader] Index loaded, ' + Object.keys(this.provinceIndex).length + ' provinces available');
     } catch (e) {
       console.error('[DataLoader] Failed to load index:', e);
@@ -57,7 +57,7 @@ module.exports = {
   // Load a single province file
   loadProvince(name, fileName) {
     try {
-      var stations = require('data/provinces/' + fileName + '.js');
+      var stations = require('./provinces/' + fileName + '.js');
       this.allStations = this.allStations.concat(stations);
       this.loadedProvinces[name] = true;
       console.log('[DataLoader] Loaded ' + name + ': ' + stations.length + ' stations (total: ' + this.allStations.length + ')');
@@ -88,7 +88,7 @@ module.exports = {
   // Fallback: load all from old stations.js format
   loadAllFallback() {
     try {
-      var raw = require('data/stations.js');
+      var raw = require('./stations.js');
       this.allStations = raw;
       console.log('[DataLoader] Fallback loaded ' + this.allStations.length + ' stations');
     } catch (e) {
