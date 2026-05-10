@@ -191,4 +191,4 @@ module.exports = {
     "center_lat": 37.28,
     "center_lng": 105.32
   }
-};
+}

@@ -38,10 +38,10 @@ module.exports = {
       console.log('  ' + (i+1) + '. ' + sorted[i].name + ' (' + sorted[i].distance.toFixed(0) + 'km, ' + sorted[i].count + ' stations)');
     }
 
-    // Load first batch immediately (closest 5 provinces or ~3000 stations)
+    // Load first batch immediately (closest provinces or ~3000 stations)
     var loaded = 0;
     for (var i = 0; i < sorted.length && loaded < 3000; i++) {
-      this.loadProvince(sorted[i].name, sorted[i].file);
+      this.addStations(sorted[i].name, sorted[i]);
       loaded += sorted[i].count;
     }
 
@@ -54,16 +54,12 @@ module.exports = {
     }
   },
 
-  // Load a single province file
-  loadProvince(name, fileName) {
-    try {
-      var stations = require('/data/provinces/' + fileName + '.js');
-      this.allStations = this.allStations.concat(stations);
-      this.loadedProvinces[name] = true;
-      console.log('[DataLoader] Loaded ' + name + ': ' + stations.length + ' stations (total: ' + this.allStations.length + ')');
-    } catch (e) {
-      console.error('[DataLoader] Failed to load ' + name + ':', e);
-    }
+  // Add pre-loaded station data to the collection
+  addStations(name, stations) {
+    if (!stations || !stations.length) return;
+    this.allStations = this.allStations.concat(stations);
+    this.loadedProvinces[name] = true;
+    console.log('[DataLoader] Loaded ' + name + ': ' + stations.length + ' stations (total: ' + this.allStations.length + ')');
   },
 
   // Load next batch of provinces (background loading)
@@ -78,7 +74,7 @@ module.exports = {
     var batchSize = Math.min(3, this.loadingQueue.length);
     for (var i = 0; i < batchSize; i++) {
       var item = this.loadingQueue.shift();
-      this.loadProvince(item.name, item.file);
+      this.addStations(item.name, item);
     }
 
     // Continue loading after a short delay to avoid blocking UI
