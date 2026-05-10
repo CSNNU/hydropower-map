@@ -107,13 +107,13 @@
     </view>
 
     <!-- Contact info -->
-    <view class="contact-section" wx:if="{{detailStation && detailStation.contact_name}}">
+    <view class="contact-section" wx:if="{{detailStation && detailStation.contact}}">
       <text class="section-title">联系信息</text>
       <view class="contact-row">
-        <text>联系人: {{detailStation.contact_name}}</text>
+        <text>&#128100; 联系人: {{detailStation.contact}}</text>
       </view>
-      <view class="contact-row" wx:if="{{detailStation.contact_phone}}" bindtap="makeCall" data-phone="{{detailStation.contact_phone}}">
-        <text class="phone-link">&#128222; {{detailStation.contact_phone}}</text>
+      <view class="contact-row" wx:if="{{detailStation.phone}}" bindtap="makeCall" data-phone="{{detailStation.phone}}">
+        <text class="phone-link">&#128222; 电话: {{detailStation.phone}}</text>
       </view>
     </view>
 

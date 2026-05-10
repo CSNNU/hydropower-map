@@ -1,3 +1,1 @@
-module.exports = [
-{"id": 6, "name": "天津市于桥水力发电有限责任公司", "lat": 40.032377, "lng": 117.441534, "capacity": "5800.0 kW", "type": "坝后式", "province": "天津市", "city": "天津市", "county": "市直属电站"}
-];
+module.exports = [{"id": 6, "name": "天津市于桥水力发电有限责任公司", "lat": 40.032377, "lng": 117.441534, "capacity": "5800.0 kW", "type": "坝后式", "province": "天津市", "city": "天津市", "county": "市直属电站", "contact": "王兆兴", "phone": "13820627829"}]

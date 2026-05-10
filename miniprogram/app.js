@@ -51,73 +51,51 @@ App({
     this.globalData.dataLoader = DataLoader;
     DataLoader.init();
 
-    // If index loaded but no location yet, load a default set (top provinces by count)
-    if (DataLoader.provinceIndex && !this.globalData.userLat) {
-      console.log('[App] No location yet, loading top provinces...');
+    // Load all provinces progressively in background
+    if (DataLoader.provinceIndex) {
+      console.log('[App] Loading all provinces...');
       var self = this;
-      setTimeout(function() {
-        // Load the 3 largest provinces as initial data
-        DataLoader.addStations('广东省', ProvinceData['p11']);
-        DataLoader.addStations('福建省', ProvinceData['p24']);
-        DataLoader.addStations('湖南省', ProvinceData['p22']);
-        self.globalData.allStations = DataLoader.allStations;
-        self.globalData.dataReady = true;
-        console.log('[App] Initial load complete: ' + self.globalData.allStations.length + ' stations');
-
-        // Notify pages that data is ready
-        if (self._onDataReady) {
-          self._onDataReady();
-        }
-      }, 100);
-    }
-  },
-
-  // Called when user location is obtained - trigger progressive loading
-  onDataLoadedWithLocation(lat, lng) {
-    this.globalData.userLat = lat;
-    this.globalData.userLng = lng;
-
-    if (DataLoader.provinceIndex && DataLoader.allStations.length === 0) {
-      console.log('[App] Loading data based on location: ' + lat.toFixed(4) + ', ' + lng.toFixed(4));
-      var self = this;
-
-      // Get sorted province list from loader, then load them using pre-defined modules
+      
+      // Get sorted province list by count (largest first for initial load)
       var provinces = Object.keys(DataLoader.provinceIndex);
       var sorted = provinces.map(function(p) {
         var info = DataLoader.provinceIndex[p];
-        var dist = DataLoader.calcDistance(lat, lng, info.center_lat, info.center_lng);
-        return { name: p, file: info.file, count: info.count, distance: dist };
+        return { name: p, file: info.file, count: info.count };
       });
-      sorted.sort(function(a, b) { return a.distance - b.distance; });
+      sorted.sort(function(a, b) { return b.count - a.count; });
 
-      console.log('[App] Loading order (by distance):');
-      for (var i = 0; i < Math.min(10, sorted.length); i++) {
-        console.log('  ' + (i+1) + '. ' + sorted[i].name + ' (' + sorted[i].distance.toFixed(0) + 'km, ' + sorted[i].count + ' stations)');
-      }
-
-      // Load first batch immediately (closest provinces or ~3000 stations)
-      var loaded = 0;
-      for (var i = 0; i < sorted.length && loaded < 3000; i++) {
+      // Load first batch immediately (top 5 provinces by count)
+      for (var i = 0; i < Math.min(5, sorted.length); i++) {
         DataLoader.addStations(sorted[i].name, ProvinceData[sorted[i].file]);
-        loaded += sorted[i].count;
       }
+      
+      self.globalData.allStations = DataLoader.allStations;
+      self.globalData.dataReady = true;
+      console.log('[App] Initial load complete: ' + self.globalData.allStations.length + ' stations');
 
       // Load remaining provinces progressively in background
-      var startIdx = i;
+      var startIdx = Math.min(5, sorted.length);
       if (startIdx < sorted.length) {
         console.log('[App] Will load ' + (sorted.length - startIdx) + ' more provinces in background');
         this._loadRemaining(sorted.slice(startIdx));
       }
 
-      // Wait for initial batch to complete
-      setTimeout(function() {
-        self.globalData.allStations = DataLoader.allStations;
-        self.globalData.dataReady = true;
-        console.log('[App] Location-based load: ' + self.globalData.allStations.length + ' stations');
-        if (self._onDataReady) {
-          self._onDataReady();
-        }
-      }, 500);
+      // Notify pages that data is ready
+      if (self._onDataReady) {
+        self._onDataReady();
+      }
+    }
+  },
+
+  // Called when user location is obtained - update nearby stations
+  onDataLoadedWithLocation(lat, lng) {
+    this.globalData.userLat = lat;
+    this.globalData.userLng = lng;
+    console.log('[App] Location updated: ' + lat.toFixed(4) + ', ' + lng.toFixed(4));
+    
+    // Notify pages to refresh nearby stations
+    if (this._onDataReady) {
+      this._onDataReady();
     }
   },
 
@@ -134,6 +112,9 @@ App({
       var item = queue.shift();
       DataLoader.addStations(item.name, ProvinceData[item.file]);
     }
+    
+    // Update global data after each batch
+    self.globalData.allStations = DataLoader.allStations;
 
     setTimeout(function() {
       self._loadRemaining(queue);
