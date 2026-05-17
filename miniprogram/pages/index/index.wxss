@@ -126,23 +126,24 @@
 /* Map */
 .map { flex: 1; width: 100%; }
 
-/* Detail panel */
-.detail-panel {
+/* Detail panel overlay */
+.detail-overlay {
   position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.5);
+  display: flex;
+  align-items: flex-end;
+  z-index: 999;
+}
+
+.detail-panel {
+  width: 100%;
   background: white;
   border-radius: 16px 16px 0 0;
   padding: 20px;
-  box-shadow: 0 -4px 20px rgba(0,0,0,0.15);
-  transform: translateY(100%);
-  transition: transform 0.3s ease;
-  z-index: 999;
   max-height: 70vh;
   overflow-y: auto;
 }
-.detail-panel.active { transform: translateY(0); }
 
 .panel-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
 .station-name { font-size: 18px; font-weight: 700; color: #1a5276; }
@@ -154,17 +155,24 @@
 .value { font-size: 14px; font-weight: 600; color: #333; }
 
 .contact-section { border-top: 1px solid #eee; padding-top: 12px; margin-bottom: 12px; }
+.coord-section { border-top: 1px solid #eee; padding-top: 12px; margin-bottom: 12px; }
 .section-title { font-size: 14px; font-weight: 600; color: #1a5276; display: block; margin-bottom: 8px; }
 .contact-row { font-size: 13px; color: #555; padding: 4px 0; }
-.phone-link { color: #2e86c1 !important; text-decoration: underline; }
+.phone-row { padding: 8px 0; }
+.phone-link { color: #2e86c1 !important; text-decoration: underline; font-size: 14px; }
+.coord-row { display: flex; align-items: center; padding: 8px 0; gap: 8px; }
+.coord-label { font-size: 13px; color: #555; min-width: 50px; }
+.coord-value { font-size: 13px; color: #333; flex: 1; }
+.coord-nav { font-size: 12px; color: #27ae60; text-decoration: underline; padding: 4px 8px; }
 
-.action-buttons { display: flex; gap: 8px; }
+.action-buttons { display: flex; gap: 8px; margin-top: 12px; }
 .btn-navigate {
   width: 100%;
   background: #27ae60;
   color: white;
   border-radius: 8px;
   font-size: 14px;
+  margin: 0;
 }
 
 /* Legend */

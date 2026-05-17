@@ -1,95 +1,24 @@
-// Province-based progressive data loader for mini program
+// Simple data loader - all data is pre-loaded in memory
 module.exports = {
   allStations: [],
-  loadedProvinces: {},
   provinceIndex: null,
-  loadingQueue: [],
-  isLoading: false,
 
-  // Initialize - load the index file first (small)
-  init() {
-    try {
-      this.provinceIndex = require('./provinces/index.js');
-      console.log('[DataLoader] Index loaded, ' + Object.keys(this.provinceIndex).length + ' provinces available');
-    } catch (e) {
-      console.error('[DataLoader] Failed to load index:', e);
-      // Fallback: try loading all at once from old stations.js
-      this.loadAllFallback();
-    }
-  },
-
-  // Load nearby provinces first, then rest progressively
-  loadByLocation(userLat, userLng) {
-    if (!this.provinceIndex) return;
-
+  // Get stations near a location
+  getNearbyStations(lat, lng, radius) {
     var self = this;
-    var provinces = Object.keys(this.provinceIndex);
-
-    // Sort by distance from user location
-    var sorted = provinces.map(function(p) {
-      var info = self.provinceIndex[p];
-      var dist = self.calcDistance(userLat, userLng, info.center_lat, info.center_lng);
-      return { name: p, file: info.file, count: info.count, distance: dist };
-    });
-    sorted.sort(function(a, b) { return a.distance - b.distance; });
-
-    console.log('[DataLoader] Loading order (by distance):');
-    for (var i = 0; i < Math.min(10, sorted.length); i++) {
-      console.log('  ' + (i+1) + '. ' + sorted[i].name + ' (' + sorted[i].distance.toFixed(0) + 'km, ' + sorted[i].count + ' stations)');
+    var nearby = [];
+    for (var i = 0; i < self.allStations.length; i++) {
+      var s = self.allStations[i];
+      var sLat = s.lat || s.la;
+      var sLng = s.lng || s.ln;
+      if (!sLat || !sLng) continue;
+      var dist = self.calcDistance(lat, lng, sLat, sLng);
+      if (dist <= radius) {
+        nearby.push({ station: s, distance: dist });
+      }
     }
-
-    // Load first batch immediately (closest provinces or ~3000 stations)
-    var loaded = 0;
-    for (var i = 0; i < sorted.length && loaded < 3000; i++) {
-      this.addStations(sorted[i].name, sorted[i]);
-      loaded += sorted[i].count;
-    }
-
-    // Load remaining provinces progressively in background
-    var startIdx = i;
-    if (startIdx < sorted.length) {
-      console.log('[DataLoader] Will load ' + (sorted.length - startIdx) + ' more provinces in background');
-      this.loadingQueue = sorted.slice(startIdx);
-      this.loadNextBatch();
-    }
-  },
-
-  // Add pre-loaded station data to the collection
-  addStations(name, stations) {
-    if (!stations || !stations.length) return;
-    this.allStations = this.allStations.concat(stations);
-    this.loadedProvinces[name] = true;
-    console.log('[DataLoader] Loaded ' + name + ': ' + stations.length + ' stations (total: ' + this.allStations.length + ')');
-  },
-
-  // Load next batch of provinces (background loading)
-  loadNextBatch() {
-    if (this.loadingQueue.length === 0) {
-      this.isLoading = false;
-      console.log('[DataLoader] All provinces loaded. Total: ' + this.allStations.length);
-      return;
-    }
-
-    // Load up to 3 provinces per batch
-    var batchSize = Math.min(3, this.loadingQueue.length);
-    for (var i = 0; i < batchSize; i++) {
-      var item = this.loadingQueue.shift();
-      this.addStations(item.name, item);
-    }
-
-    // Continue loading after a short delay to avoid blocking UI
-    setTimeout(this.loadNextBatch.bind(this), 100);
-  },
-
-  // Fallback: load all from old stations.js format
-  loadAllFallback() {
-    try {
-      var raw = require('./stations.js');
-      this.allStations = raw;
-      console.log('[DataLoader] Fallback loaded ' + this.allStations.length + ' stations');
-    } catch (e) {
-      console.error('[DataLoader] Fallback also failed:', e);
-    }
+    nearby.sort(function(a, b) { return a.distance - b.distance; });
+    return nearby;
   },
 
   // Haversine distance calculation
@@ -101,15 +30,5 @@ module.exports = {
             + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180)
             * Math.sin(dLng/2) * Math.sin(dLng/2);
     return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-  },
-
-  // Get total available station count (from index, without loading)
-  getTotalAvailable() {
-    if (!this.provinceIndex) return 0;
-    var total = 0;
-    Object.keys(this.provinceIndex).forEach(function(p) {
-      total += this.provinceIndex[p].count;
-    }.bind(this));
-    return total;
   }
 };

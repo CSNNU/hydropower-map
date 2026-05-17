@@ -10,8 +10,13 @@
 .value { font-size: 15px; font-weight: 600; color: #333; }
 
 .contact-section { background: white; border-radius: 8px; padding: 12px; margin-bottom: 16px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
+.coord-section { background: white; border-radius: 8px; padding: 12px; margin-bottom: 16px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
 .section-title { font-size: 15px; font-weight: 600; color: #1a5276; display: block; margin-bottom: 8px; }
 .contact-row { font-size: 14px; color: #555; padding: 4px 0; }
 .phone-link { color: #2e86c1 !important; text-decoration: underline; }
+.coord-row { display: flex; align-items: center; padding: 8px 0; gap: 8px; }
+.coord-label { font-size: 14px; color: #555; min-width: 50px; }
+.coord-value { font-size: 14px; color: #333; flex: 1; }
+.coord-nav { font-size: 13px; color: #27ae60; text-decoration: underline; padding: 4px 8px; }
 
 .btn-navigate { width: 100%; background: #27ae60; color: white; border-radius: 8px; font-size: 15px; margin-top: 10px; }

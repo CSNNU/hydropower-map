@@ -1,40 +1,7 @@
-var DataLoader = require('data/loader.js');
+var pako = require('./utils/pako.min.js');
 
-// Pre-define all province data modules (static requires resolved at compile time)
-var ProvinceData = {
-  'p01': require('data/provinces/p01.js'),
-  'p02': require('data/provinces/p02.js'),
-  'p03': require('data/provinces/p03.js'),
-  'p04': require('data/provinces/p04.js'),
-  'p05': require('data/provinces/p05.js'),
-  'p06': require('data/provinces/p06.js'),
-  'p07': require('data/provinces/p07.js'),
-  'p08': require('data/provinces/p08.js'),
-  'p09': require('data/provinces/p09.js'),
-  'p10': require('data/provinces/p10.js'),
-  'p11': require('data/provinces/p11.js'),
-  'p12': require('data/provinces/p12.js'),
-  'p13': require('data/provinces/p13.js'),
-  'p14': require('data/provinces/p14.js'),
-  'p15': require('data/provinces/p15.js'),
-  'p16': require('data/provinces/p16.js'),
-  'p17': require('data/provinces/p17.js'),
-  'p18': require('data/provinces/p18.js'),
-  'p19': require('data/provinces/p19.js'),
-  'p20': require('data/provinces/p20.js'),
-  'p21': require('data/provinces/p21.js'),
-  'p22': require('data/provinces/p22.js'),
-  'p23': require('data/provinces/p23.js'),
-  'p24': require('data/provinces/p24.js'),
-  'p25': require('data/provinces/p25.js'),
-  'p26': require('data/provinces/p26.js'),
-  'p27': require('data/provinces/p27.js'),
-  'p28': require('data/provinces/p28.js'),
-  'p29': require('data/provinces/p29.js'),
-  'p30': require('data/provinces/p30.js'),
-  'p31': require('data/provinces/p31.js'),
-  'p32': require('data/provinces/p32.js')
-};
+// Compressed data (base64 encoded gzip with dictionary encoding)
+var CompressedData = require('./data/data.js');
 
 App({
   globalData: {
@@ -42,86 +9,119 @@ App({
     userLat: null,
     userLng: null,
     nearbyRadius: 50,
-    dataLoader: null,
-    dataReady: false
+    dataReady: false,
+    authorized: false,
+    phone: '',
+    // Dictionaries for decoding
+    provinces: [],
+    cities: [],
+    counties: []
+  },
+
+  checkAuth() {
+    // 检查是否已授权
+    var authorized = wx.getStorageSync('authorized');
+    var phone = wx.getStorageSync('phone');
+    if (authorized && phone) {
+      this.globalData.authorized = true;
+      this.globalData.phone = phone;
+      return true;
+    }
+    return false;
   },
 
   onLaunch() {
-    // Initialize progressive data loader
-    this.globalData.dataLoader = DataLoader;
-    DataLoader.init();
-
-    // Load all provinces progressively in background
-    if (DataLoader.provinceIndex) {
-      console.log('[App] Loading all provinces...');
-      var self = this;
-      
-      // Get sorted province list by count (largest first for initial load)
-      var provinces = Object.keys(DataLoader.provinceIndex);
-      var sorted = provinces.map(function(p) {
-        var info = DataLoader.provinceIndex[p];
-        return { name: p, file: info.file, count: info.count };
+    // 权限检查 - 未授权跳转到登录页
+    if (!this.checkAuth()) {
+      wx.reLaunch({
+        url: '/pages/login/login'
       });
-      sorted.sort(function(a, b) { return b.count - a.count; });
-
-      // Load first batch immediately (top 5 provinces by count)
-      for (var i = 0; i < Math.min(5, sorted.length); i++) {
-        DataLoader.addStations(sorted[i].name, ProvinceData[sorted[i].file]);
-      }
-      
-      self.globalData.allStations = DataLoader.allStations;
-      self.globalData.dataReady = true;
-      console.log('[App] Initial load complete: ' + self.globalData.allStations.length + ' stations');
-
-      // Load remaining provinces progressively in background
-      var startIdx = Math.min(5, sorted.length);
-      if (startIdx < sorted.length) {
-        console.log('[App] Will load ' + (sorted.length - startIdx) + ' more provinces in background');
-        this._loadRemaining(sorted.slice(startIdx));
-      }
-
-      // Notify pages that data is ready
-      if (self._onDataReady) {
-        self._onDataReady();
-      }
-    }
-  },
-
-  // Called when user location is obtained - update nearby stations
-  onDataLoadedWithLocation(lat, lng) {
-    this.globalData.userLat = lat;
-    this.globalData.userLng = lng;
-    console.log('[App] Location updated: ' + lat.toFixed(4) + ', ' + lng.toFixed(4));
-    
-    // Notify pages to refresh nearby stations
-    if (this._onDataReady) {
-      this._onDataReady();
-    }
-  },
-
-  // Background loading of remaining provinces
-  _loadRemaining(queue) {
-    if (!queue || queue.length === 0) {
-      console.log('[App] All provinces loaded. Total: ' + DataLoader.allStations.length);
       return;
     }
 
     var self = this;
-    var batchSize = Math.min(3, queue.length);
-    for (var i = 0; i < batchSize; i++) {
-      var item = queue.shift();
-      DataLoader.addStations(item.name, ProvinceData[item.file]);
-    }
+    console.log('[App] Decompressing data...');
     
-    // Update global data after each batch
-    self.globalData.allStations = DataLoader.allStations;
-
+    // Show loading immediately
+    wx.showLoading({ title: '数据加载中...', mask: true });
+    
+    // Use setTimeout to yield to UI thread
     setTimeout(function() {
-      self._loadRemaining(queue);
+      try {
+        // Decode base64 to ArrayBuffer
+        var buffer = wx.base64ToArrayBuffer(CompressedData);
+        var bytes = new Uint8Array(buffer);
+        
+        // Decompress gzip
+        var decompressed = pako.ungzip(bytes, { to: 'string' });
+        var rawData = JSON.parse(decompressed);
+        
+        // Store dictionaries
+        self.globalData.provinces = rawData.p || [];
+        self.globalData.cities = rawData.c || [];
+        self.globalData.counties = rawData.q || [];
+        self.globalData.types = rawData.t || [];
+        self.globalData.attrs = rawData.a || [];
+        
+        // Decode stations
+        var stations = [];
+        var s = rawData.s || [];
+        for (var i = 0; i < s.length; i++) {
+          var station = s[i];
+          // Coords are * 1000000 for 6 decimal places
+          var damLat = station[5] ? station[5] / 1000000 : null;
+          var damLng = station[6] ? station[6] / 1000000 : null;
+          var factoryLat = station[7] ? station[7] / 1000000 : null;
+          var factoryLng = station[8] ? station[8] / 1000000 : null;
+          // Primary coords for map: factory if available, else dam
+          var lat = factoryLat || damLat;
+          var lng = factoryLng || damLng;
+          // Capacity is * 10
+          var capacity = station[10] ? station[10] / 10 : '';
+          stations.push({
+            id: String(station[0]),
+            name: station[1] || '',
+            province: self.globalData.provinces[station[2]] || '',
+            city: self.globalData.cities[station[3]] || '',
+            county: self.globalData.counties[station[4]] || '',
+            lat: lat,
+            lng: lng,
+            dam_lat: damLat,
+            dam_lng: damLng,
+            factory_lat: factoryLat,
+            factory_lng: factoryLng,
+            type: self.globalData.types[station[9]] || '',
+            capacity: capacity,
+            attr: self.globalData.attrs[station[11]] || '',
+            contact: station[12] || '',
+            phone: station[13] || ''
+          });
+        }
+        
+        console.log('[App] Decompressed ' + stations.length + ' stations');
+        console.log('[App] First station:', stations[0]);
+        
+        self.globalData.allStations = stations;
+        self.globalData.dataReady = true;
+        
+        wx.hideLoading();
+        
+        if (self._onDataReady) self._onDataReady();
+        
+      } catch (e) {
+        wx.hideLoading();
+        console.error('[App] Failed to decompress data:', e);
+      }
     }, 100);
   },
 
-  // Register callback for when data becomes ready
+  onDataLoadedWithLocation(lat, lng) {
+    this.globalData.userLat = lat;
+    this.globalData.userLng = lng;
+    console.log('[App] Location: ' + lat.toFixed(4) + ', ' + lng.toFixed(4));
+    if (this._onDataReady) this._onDataReady();
+  },
+
   onDataReady(callback) {
     this._onDataReady = callback;
   },

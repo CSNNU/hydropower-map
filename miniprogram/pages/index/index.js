@@ -25,6 +25,11 @@ Page({
   },
 
   onLoad() {
+    // 权限检查
+    if (!getApp().checkAuth()) {
+      wx.reLaunch({ url: '/pages/login/login' });
+      return;
+    }
     const app = getApp();
     this.refreshData();
 
@@ -140,14 +145,14 @@ Page({
       if (dist <= radius) {
         count++;
         markers.push({
-          id: s.id,
+          id: parseInt(s.id) || idx + 1,
           latitude: s.lat,
           longitude: s.lng,
           iconPath: '/images/station.png',
           width: 24,
           height: 24,
           callout: {
-            content: s.name + '\n' + dist.toFixed(1) + 'km | ' + s.capacity,
+            content: s.name + '\n' + s.province + ' ' + s.city + ' ' + s.county + '\n' + (s.capacity ? s.capacity + 'kW ' : '') + (s.type ? s.type : '') + '\n' + dist.toFixed(1) + 'km' + (s.contact ? '\n联系人: ' + s.contact : '') + (s.phone ? '\n电话: ' + s.phone : ''),
             display: 'BYCLICK',
             borderRadius: 8,
             padding: 6,
@@ -189,15 +194,37 @@ Page({
     if (markerId === 0) return; // user location
 
     const app = getApp();
-    var station = app.globalData.allStations.find(function(s) { return s.id === markerId; });
+    // Convert markerId to string for comparison (data id is string)
+    var station = app.globalData.allStations.find(function(s) { return String(s.id) === String(markerId); });
+    console.log('[MarkerTap] markerId:', markerId, 'station:', station);
     if (!station) return;
 
     var dist = app.calcDistance(app.globalData.userLat, app.globalData.userLng, station.lat, station.lng);
 
+    // Format for display
+    var detailStation = Object.assign({}, station, {
+      distance: dist.toFixed(1),
+      latStr: station.lat ? station.lat.toFixed(4) : '未知',
+      lngStr: station.lng ? station.lng.toFixed(4) : '未知',
+      capacityStr: station.capacity ? station.capacity + ' kW' : '未知',
+      typeStr: station.type || '未知',
+      attrStr: station.attr || '未知',
+      contactStr: station.contact || '未知',
+      phoneStr: station.phone || '未知',
+      damLatStr: station.dam_lat ? station.dam_lat.toFixed(4) : '未知',
+      damLngStr: station.dam_lng ? station.dam_lng.toFixed(4) : '未知',
+      factoryLatStr: station.factory_lat ? station.factory_lat.toFixed(4) : '未知',
+      factoryLngStr: station.factory_lng ? station.factory_lng.toFixed(4) : '未知',
+      provinceStr: station.province || '未知',
+      cityStr: station.city || '未知',
+      countyStr: station.county || '未知'
+    });
+
     this.setData({
       showDetail: true,
-      detailStation: Object.assign({}, station, { distance: dist.toFixed(1) })
+      detailStation: detailStation
     });
+    console.log('[MarkerTap] detailStation:', this.data.detailStation);
   },
 
   // Close detail panel
@@ -351,5 +378,36 @@ Page({
       address: s.province + ' ' + s.city + ' ' + s.county,
       scale: 15
     });
-  }
+  },
+
+  // Navigate to dam
+  navigateToDam(e) {
+    var lat = e.currentTarget.dataset.lat;
+    var lng = e.currentTarget.dataset.lng;
+    var s = this.data.detailStation;
+    wx.openLocation({
+      latitude: lat,
+      longitude: lng,
+      name: s.name + ' (坝址)',
+      address: s.province + ' ' + s.city + ' ' + s.county,
+      scale: 15
+    });
+  },
+
+  // Navigate to factory
+  navigateToFactory(e) {
+    var lat = e.currentTarget.dataset.lat;
+    var lng = e.currentTarget.dataset.lng;
+    var s = this.data.detailStation;
+    wx.openLocation({
+      latitude: lat,
+      longitude: lng,
+      name: s.name + ' (厂房)',
+      address: s.province + ' ' + s.city + ' ' + s.county,
+      scale: 15
+    });
+  },
+
+  // No-op function to prevent event bubbling
+  noop: function() {}
 });
