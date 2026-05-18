@@ -38,10 +38,10 @@ Page({
         wx.setStorageSync('phone', phone);
         console.log('[Auth] Verified: ' + phone);
         setTimeout(function() {
-          wx.reLaunch({
+          wx.redirectTo({
             url: '/pages/index/index'
           });
-        }, 300);
+        }, 100);
       } else {
         self.setData({
           loading: false,

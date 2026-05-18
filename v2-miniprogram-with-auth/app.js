@@ -4,7 +4,6 @@ var CompressedData1 = require('./data/data1.js');
 var CompressedData2 = require('./data/data2.js');
 var CompressedData3 = require('./data/data3.js');
 var CompressedData4 = require('./data/data4.js');
-var CompressedDataList = [CompressedData1, CompressedData2, CompressedData3, CompressedData4];
 
 App({
   globalData: {
@@ -37,41 +36,66 @@ App({
     var self = this;
 
     if (!this.checkAuth()) {
-      wx.reLaunch({ url: '/pages/login/login' });
+      wx.redirectTo({ url: '/pages/login/login' });
       return;
     }
 
-    console.log('[App] 加载数据...');
+    this.loadStations();
+  },
+
+  loadStations() {
+    var self = this;
+    console.log('[App] 开始加载数据...');
     wx.showLoading({ title: '数据加载中...', mask: true });
 
-    setTimeout(function() {
+    // 分块加载，每块用setTimeout避免阻塞UI
+    var chunks = [CompressedData1, CompressedData2, CompressedData3, CompressedData4];
+    var allRawStations = [];
+    var dicts = null;
+    var chunkIndex = 0;
+
+    function loadNextChunk() {
+      if (chunkIndex >= chunks.length) {
+        // 所有数据加载完成，开始解码
+        console.log('[App] 总电站数:', allRawStations.length);
+        decodeStations();
+        return;
+      }
+
       try {
-        var allRawStations = [];
-        var dicts = null;
+        var buffer = wx.base64ToArrayBuffer(chunks[chunkIndex]);
+        var bytes = new Uint8Array(buffer);
+        var decompressed = pako.ungzip(bytes, { to: 'string' });
+        var rawData = JSON.parse(decompressed);
 
-        for (var d = 0; d < CompressedDataList.length; d++) {
-          var buffer = wx.base64ToArrayBuffer(CompressedDataList[d]);
-          var bytes = new Uint8Array(buffer);
-          var decompressed = pako.ungzip(bytes, { to: 'string' });
-          var rawData = JSON.parse(decompressed);
-
-          if (!dicts) {
-            dicts = rawData;
-            self.globalData.provinces = rawData.p || [];
-            self.globalData.cities = rawData.c || [];
-            self.globalData.counties = rawData.q || [];
-            self.globalData.types = rawData.t || [];
-            self.globalData.attrs = rawData.a || [];
-          }
-
-          var s = rawData.s || [];
-          for (var i = 0; i < s.length; i++) {
-            allRawStations.push(s[i]);
-          }
+        if (chunkIndex === 0) {
+          dicts = rawData;
+          self.globalData.provinces = rawData.p || [];
+          self.globalData.cities = rawData.c || [];
+          self.globalData.counties = rawData.q || [];
+          self.globalData.types = rawData.t || [];
+          self.globalData.attrs = rawData.a || [];
         }
 
-        console.log('[App] 总电站数:', allRawStations.length);
+        var s = rawData.s || [];
+        for (var i = 0; i < s.length; i++) {
+          allRawStations.push(s[i]);
+        }
+        console.log('[App] 已加载第' + (chunkIndex + 1) + '块，共' + allRawStations.length + '条');
+      } catch (e) {
+        console.error('[App] 加载第' + (chunkIndex + 1) + '块失败:', e);
+        wx.hideLoading();
+        wx.showModal({ title: '数据加载失败', content: '第' + (chunkIndex + 1) + '块数据解压失败', showCancel: false });
+        return;
+      }
 
+      chunkIndex++;
+      // 用setTimeout让出UI线程
+      setTimeout(loadNextChunk, 0);
+    }
+
+    function decodeStations() {
+      try {
         var stations = [];
         for (var i = 0; i < allRawStations.length; i++) {
           var station = allRawStations[i];
@@ -104,14 +128,13 @@ App({
         if (self._onDataReady) self._onDataReady();
       } catch (e) {
         wx.hideLoading();
-        console.error('[App] 数据加载失败:', e);
-        wx.showModal({
-          title: '数据加载失败',
-          content: '错误: ' + (e.message || e),
-          showCancel: false
-        });
+        console.error('[App] 解码失败:', e);
+        wx.showModal({ title: '数据加载失败', content: '数据解码失败: ' + (e.message || e), showCancel: false });
       }
-    }, 100);
+    }
+
+    // 开始加载
+    loadNextChunk();
   },
 
   onDataLoadedWithLocation(lat, lng) {
