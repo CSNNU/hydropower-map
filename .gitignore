@@ -1,0 +1,11 @@
+# 旧文件（新版本在子文件夹中）
+/stations.json
+/stations.json.gz
+/index.html
+/hydropower-stations.json.gz
+
+# 旧 lib 文件夹（html-version 内有自己的 lib）
+/lib/
+
+# 压缩数据源文件（各版本内已包含）
+html-version/hydropower-stations.json.gz

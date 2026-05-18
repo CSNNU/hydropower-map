@@ -1,0 +1,18 @@
+{
+  "pages": [
+    "pages/index/index",
+    "pages/detail/detail"
+  ],
+  "window": {
+    "navigationBarTitleText": "小水电站地图查询",
+    "navigationBarBackgroundColor": "#1a5276",
+    "navigationBarTextStyle": "white",
+    "backgroundColor": "#f0f4f8"
+  },
+  "permission": {
+    "scope.userLocation": {
+      "desc": "用于获取您的位置，显示附近的水电站"
+    }
+  },
+  "requiredPrivateInfos": ["getLocation"]
+}

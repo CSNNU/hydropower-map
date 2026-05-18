@@ -1,0 +1,58 @@
+<view class="container">
+  <view class="header">
+    <text class="logo">⚡</text>
+    <text class="title">{{station.name}}</text>
+  </view>
+
+  <view class="info-grid" wx:if="{{station}}">
+    <view class="info-item">
+      <text class="label">省份</text>
+      <text class="value">{{station.provinceStr}}</text>
+    </view>
+    <view class="info-item">
+      <text class="label">城市</text>
+      <text class="value">{{station.cityStr}}</text>
+    </view>
+    <view class="info-item">
+      <text class="label">区县</text>
+      <text class="value">{{station.countyStr}}</text>
+    </view>
+    <view class="info-item">
+      <text class="label">装机容量</text>
+      <text class="value">{{station.capacityStr}}</text>
+    </view>
+    <view class="info-item">
+      <text class="label">开发方式</text>
+      <text class="value">{{station.typeStr}}</text>
+    </view>
+    <view class="info-item">
+      <text class="label">电站属性</text>
+      <text class="value">{{station.attrStr}}</text>
+    </view>
+  </view>
+
+  <!-- Coordinates -->
+  <view class="coord-section">
+    <text class="section-title">坐标信息</text>
+    <view class="coord-row" wx:if="{{station.dam_lat}}">
+      <text class="coord-label">🏔 坝址</text>
+      <text class="coord-value">{{station.damLatStr}}, {{station.damLngStr}}</text>
+      <text class="coord-nav" bindtap="navigateToDam">导航</text>
+    </view>
+    <view class="coord-row">
+      <text class="coord-label">🏭 厂房</text>
+      <text class="coord-value">{{station.factoryLatStr}}, {{station.factoryLngStr}}</text>
+      <text class="coord-nav" bindtap="navigateToFactory">导航</text>
+    </view>
+  </view>
+
+  <view class="contact-section">
+    <text class="section-title">联系信息</text>
+    <view class="contact-row">联系人: {{station.contactStr}}</view>
+    <view class="contact-row phone-link" wx:if="{{station.phone && station.phone !== '未知'}}" bindtap="makeCall">
+      📞 {{station.phoneStr}} (点击拨打)
+    </view>
+  </view>
+
+  <button class="btn-navigate" bindtap="navigateToStation">🚚 导航前往</button>
+</view>
