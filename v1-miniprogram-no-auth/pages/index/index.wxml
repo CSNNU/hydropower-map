@@ -126,21 +126,6 @@
         </view>
       </view>
 
-      <!-- Contact info -->
-      <view class="contact-section">
-        <text class="section-title">联系信息</text>
-        <view class="contact-row">
-          <text>👤 联系人: {{detailStation.contactStr}}</text>
-        </view>
-        <view class="contact-row phone-row" wx:if="{{detailStation.phone && detailStation.phone !== '未知'}}" bindtap="makeCall" data-phone="{{detailStation.phone}}">
-          <text class="phone-link">📞 {{detailStation.phoneStr}} (点击拨打)</text>
-        </view>
-      </view>
-
-      <!-- Action buttons -->
-      <view class="action-buttons">
-        <button class="btn-navigate" bindtap="navigateToStation">🚚 导航前往</button>
-      </view>
     </view>
   </view>
 

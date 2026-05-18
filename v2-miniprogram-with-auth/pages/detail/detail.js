@@ -24,17 +24,6 @@ Page({
     }
   },
 
-  navigateToStation() {
-    var s = this.data.station;
-    wx.openLocation({
-      latitude: s.lat,
-      longitude: s.lng,
-      name: s.name,
-      address: s.province + ' ' + s.city + ' ' + s.county,
-      scale: 15
-    });
-  },
-
   navigateToDam() {
     var s = this.data.station;
     wx.openLocation({

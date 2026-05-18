@@ -147,7 +147,7 @@ Page({
           width: 24,
           height: 24,
           callout: {
-            content: s.name + '\n' + s.province + ' ' + s.city + ' ' + s.county + '\n' + (s.capacity ? s.capacity + 'kW ' : '') + (s.type ? s.type : '') + '\n' + dist.toFixed(1) + 'km' + (s.contact ? '\n联系人: ' + s.contact : '') + (s.phone ? '\n电话: ' + s.phone : ''),
+            content: s.name + '\n' + s.province + ' ' + s.city + ' ' + s.county + '\n' + (s.capacity ? s.capacity + 'kW ' : '') + (s.type ? s.type : '') + '\n' + dist.toFixed(1) + 'km',
             display: 'BYCLICK',
             borderRadius: 8,
             padding: 6,
@@ -204,8 +204,6 @@ Page({
       capacityStr: station.capacity ? station.capacity + ' kW' : '未知',
       typeStr: station.type || '未知',
       attrStr: station.attr || '未知',
-      contactStr: station.contact || '未知',
-      phoneStr: station.phone || '未知',
       damLatStr: station.dam_lat ? station.dam_lat.toFixed(4) : '未知',
       damLngStr: station.dam_lng ? station.dam_lng.toFixed(4) : '未知',
       factoryLatStr: station.factory_lat ? station.factory_lat.toFixed(4) : '未知',
@@ -352,27 +350,6 @@ Page({
       nearbyCount: 0
     });
     wx.showToast({ title: '地图已重置', icon: 'none' });
-  },
-
-  // Call phone
-  makeCall(e) {
-    var phone = e.currentTarget.dataset.phone;
-    if (phone) {
-      wx.makePhoneCall({ phoneNumber: phone });
-    }
-  },
-
-  // Navigate to station
-  navigateToStation() {
-    var s = this.data.detailStation;
-    if (!s) return;
-    wx.openLocation({
-      latitude: s.lat,
-      longitude: s.lng,
-      name: s.name,
-      address: s.province + ' ' + s.city + ' ' + s.county,
-      scale: 15
-    });
   },
 
   // Navigate to dam

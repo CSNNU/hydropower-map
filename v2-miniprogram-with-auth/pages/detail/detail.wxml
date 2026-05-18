@@ -47,5 +47,4 @@
   </view>
 
 
-  <button class="btn-navigate" bindtap="navigateToStation">🚚 导航前往</button>
 </view>
