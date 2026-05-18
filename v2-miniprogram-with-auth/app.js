@@ -93,7 +93,7 @@ App({
             factory_lat: factoryLat, factory_lng: factoryLng,
             type: self.globalData.types[station[9]] || '',
             capacity: capacity,
-            attr: self.globalData.attrs[station[10]] || ''
+            attr: self.globalData.attrs[station[11]] || ''
           });
         }
 

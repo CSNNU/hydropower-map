@@ -74,8 +74,7 @@ App({
             factory_lat: factoryLat, factory_lng: factoryLng,
             type: self.globalData.types[station[9]] || '',
             capacity: capacity,
-            attr: self.globalData.attrs[station[10]] || ''
-            // v1 无电话权限版本：不含 contact/phone
+            attr: self.globalData.attrs[station[11]] || ''
           });
         }
 
