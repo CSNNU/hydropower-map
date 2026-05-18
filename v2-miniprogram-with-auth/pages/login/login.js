@@ -37,9 +37,11 @@ Page({
         wx.setStorageSync('authorized', true);
         wx.setStorageSync('phone', phone);
         console.log('[Auth] Verified: ' + phone);
-        wx.reLaunch({
-          url: '/pages/index/index'
-        });
+        setTimeout(function() {
+          wx.reLaunch({
+            url: '/pages/index/index'
+          });
+        }, 300);
       } else {
         self.setData({
           loading: false,
