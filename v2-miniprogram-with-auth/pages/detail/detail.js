@@ -13,8 +13,6 @@ Page({
       station.capacityStr = station.capacity ? station.capacity + ' kW' : '未知';
       station.typeStr = station.type || '未知';
       station.attrStr = station.attr || '未知';
-      station.contactStr = station.contact || '未知';
-      station.phoneStr = station.phone || '未知';
       station.damLatStr = station.dam_lat ? station.dam_lat.toFixed(4) : '未知';
       station.damLngStr = station.dam_lng ? station.dam_lng.toFixed(4) : '未知';
       station.factoryLatStr = station.factory_lat ? station.factory_lat.toFixed(4) : '未知';
@@ -24,10 +22,6 @@ Page({
       station.countyStr = station.county || '未知';
       this.setData({ station: station });
     }
-  },
-
-  makeCall() {
-    wx.makePhoneCall({ phoneNumber: this.data.station.phone });
   },
 
   navigateToStation() {

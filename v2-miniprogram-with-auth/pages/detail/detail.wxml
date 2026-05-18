@@ -46,13 +46,6 @@
     </view>
   </view>
 
-  <view class="contact-section">
-    <text class="section-title">联系信息</text>
-    <view class="contact-row">联系人: {{station.contactStr}}</view>
-    <view class="contact-row phone-link" wx:if="{{station.phone && station.phone !== '未知'}}" bindtap="makeCall">
-      📞 {{station.phoneStr}} (点击拨打)
-    </view>
-  </view>
 
   <button class="btn-navigate" bindtap="navigateToStation">🚚 导航前往</button>
 </view>
