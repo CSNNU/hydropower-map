@@ -1,7 +1,7 @@
 var pako = require('./utils/pako.min.js');
 
 // 数据通过 CDN 下载，首次加载后缓存到本地
-var DATA_CDN_BASE = 'https://cdn.jsdelivr.net/gh/CSNNU/hydropower-map@main/v2-miniprogram-with-auth/data/';
+var DATA_CDN_BASE = 'https://cdn.jsdelivr.net/gh/CSNNU/hydropower-map@main/data-cdn/';
 var DATA_CHUNKS = ['data1.js', 'data2.js', 'data3.js', 'data4.js'];
 var CACHE_KEY = 'hydropower_stations_v2';
 
