@@ -224,9 +224,9 @@ let currentDetail = null;
 
 // Init map
 const map = L.map('map').setView([35.0, 105.0], 5);
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-  attribution: '&#169; OpenStreetMap',
-  maxZoom: 18
+L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+  attribution: '&copy; OpenStreetMap &copy; CARTO',
+  maxZoom: 19
 }).addTo(map);
 
 markersCluster = L.markerClusterGroup({
