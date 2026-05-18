@@ -4,16 +4,6 @@
     "pages/index/index",
     "pages/detail/detail"
   ],
-  "subpackages": [
-    {
-      "root": "subpackage-data",
-      "pages": ["index"]
-    },
-    {
-      "root": "subpackage-data2",
-      "pages": ["index"]
-    }
-  ],
   "window": {
     "navigationBarTitleText": "小水电站地图查询",
     "navigationBarBackgroundColor": "#1a5276",

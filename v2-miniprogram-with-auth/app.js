@@ -1,8 +1,11 @@
 var pako = require('./utils/pako.min.js');
 
-// 分包加载数据 - 不需要CDN
-var SubData1 = require('./subpackage-data/data.js');
-var SubData2 = require('./subpackage-data2/data.js');
+// 读取本地二进制gzip数据文件
+function readGzipFile(path) {
+  var fs = wx.getFileSystemManager();
+  var data = fs.readFileSync(path);
+  return data;
+}
 
 App({
   globalData: {
@@ -39,34 +42,31 @@ App({
       return;
     }
 
-    console.log('[App] 加载分包数据...');
+    console.log('[App] 加载数据...');
     wx.showLoading({ title: '数据加载中...', mask: true });
 
     setTimeout(function() {
       try {
         var allRawStations = [];
 
-        var buffer1 = wx.base64ToArrayBuffer(SubData1);
-        var bytes1 = new Uint8Array(buffer1);
-        var decompressed1 = pako.ungzip(bytes1, { to: 'string' });
-        var rawData1 = JSON.parse(decompressed1);
-        self.globalData.provinces = rawData1.p || [];
-        self.globalData.cities = rawData1.c || [];
-        self.globalData.counties = rawData1.q || [];
-        self.globalData.types = rawData1.t || [];
-        self.globalData.attrs = rawData1.a || [];
-        var s1 = rawData1.s || [];
-        for (var i = 0; i < s1.length; i++) {
-          allRawStations.push(s1[i]);
-        }
+        for (var d = 1; d <= 4; d++) {
+          var filePath = './data/data' + d + '.gz';
+          var buffer = readGzipFile(filePath);
+          var decompressed = pako.ungzip(buffer, { to: 'string' });
+          var rawData = JSON.parse(decompressed);
 
-        var buffer2 = wx.base64ToArrayBuffer(SubData2);
-        var bytes2 = new Uint8Array(buffer2);
-        var decompressed2 = pako.ungzip(bytes2, { to: 'string' });
-        var rawData2 = JSON.parse(decompressed2);
-        var s2 = rawData2.s || [];
-        for (var i = 0; i < s2.length; i++) {
-          allRawStations.push(s2[i]);
+          if (d === 1) {
+            self.globalData.provinces = rawData.p || [];
+            self.globalData.cities = rawData.c || [];
+            self.globalData.counties = rawData.q || [];
+            self.globalData.types = rawData.t || [];
+            self.globalData.attrs = rawData.a || [];
+          }
+
+          var s = rawData.s || [];
+          for (var i = 0; i < s.length; i++) {
+            allRawStations.push(s[i]);
+          }
         }
 
         console.log('[App] 总电站数:', allRawStations.length);
@@ -108,7 +108,7 @@ App({
         console.error('[App] 数据加载失败:', e);
         wx.showModal({
           title: '数据加载失败',
-          content: '错误: ' + e.message,
+          content: '错误: ' + (e.message || e),
           showCancel: false
         });
       }
