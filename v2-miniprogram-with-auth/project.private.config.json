@@ -1,7 +1,7 @@
 {
   "libVersion": "3.16.0",
   "condition": {},
-  "projectname": "miniprogram",
+  "projectname": "v2-miniprogram-with-auth",
   "setting": {
     "urlCheck": false,
     "coverView": true,
