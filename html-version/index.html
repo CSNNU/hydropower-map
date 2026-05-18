@@ -223,11 +223,73 @@ let nearbyRadius = 50;
 let currentDetail = null;
 
 // Init map
-const map = L.map('map').setView([35.0, 105.0], 5);
-L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-  attribution: '&copy; OpenStreetMap &copy; CARTO',
-  maxZoom: 19
-}).addTo(map);
+const map = L.map('map', { preferCanvas: true }).setView([35.0, 105.0], 5);
+
+// Canvas tile layer for offline use (no CORS issues with file://)
+L.TileLayer.Canvas = L.Layer.extend({
+  initialize: function() {
+    this._tileSize = 256;
+  },
+  onAdd: function() {
+    this._container = document.createElement('canvas');
+    this._container.style.cssText = 'position:absolute;left:0;top:0;width:100%;height:100%;';
+    map.getPanes().tilePane.appendChild(this._container);
+    map.on('moveend zoomend resize', this._draw, this);
+    this._draw();
+  },
+  onRemove: function() {
+    map.off('moveend zoomend resize', this._draw, this);
+    this._container.remove();
+  },
+  _draw: function() {
+    const ctx = this._container.getContext('2d');
+    const size = map.getSize();
+    this._container.width = size.x;
+    this._container.height = size.y;
+    
+    // Ocean background
+    ctx.fillStyle = '#a8d5e2';
+    ctx.fillRect(0, 0, size.x, size.height);
+    
+    // Draw grid lines
+    ctx.strokeStyle = 'rgba(0,0,0,0.05)';
+    ctx.lineWidth = 1;
+    const zoom = map.getZoom();
+    const scale = Math.pow(2, zoom);
+    const spacing = 256 / scale;
+    
+    const center = map.getCenter();
+    const topLeft = map.containerPointToLatLng([0, 0]);
+    const bottomRight = map.containerPointToLatLng([size.x, size.y]);
+    
+    for (let y = 0; y < size.y; y += spacing) {
+      ctx.beginPath();
+      ctx.moveTo(0, y);
+      ctx.lineTo(size.x, y);
+      ctx.stroke();
+    }
+    for (let x = 0; x < size.x; x += spacing) {
+      ctx.beginPath();
+      ctx.moveTo(x, 0);
+      ctx.lineTo(x, size.y);
+      ctx.stroke();
+    }
+    
+    // Draw lat/lng labels
+    ctx.fillStyle = 'rgba(0,0,0,0.3)';
+    ctx.font = '10px sans-serif';
+    for (let y = spacing; y < size.y; y += spacing * 4) {
+      const lat = map.containerPointToLatLng([0, y]);
+      ctx.fillText(lat.lat.toFixed(1) + '°', 5, y - 3);
+    }
+    for (let x = spacing; x < size.x; x += spacing * 4) {
+      const lng = map.containerPointToLatLng([x, 0]);
+      ctx.fillText(lng.lng.toFixed(1) + '°', x + 3, 15);
+    }
+  }
+});
+
+new L.TileLayer.Canvas().addTo(map);
 
 markersCluster = L.markerClusterGroup({
   maxClusterRadius: 50,
