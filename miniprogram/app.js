@@ -1,7 +1,11 @@
 var pako = require('./utils/pako.min.js');
 
-// Compressed data (base64 encoded gzip with dictionary encoding)
-var CompressedData = require('./data/data.js');
+// Compressed data split into multiple files (base64 encoded gzip with dictionary encoding)
+var CompressedData1 = require('./data/data1.js');
+var CompressedData2 = require('./data/data2.js');
+var CompressedData3 = require('./data/data3.js');
+var CompressedData4 = require('./data/data4.js');
+var CompressedDataList = [CompressedData1, CompressedData2, CompressedData3, CompressedData4];
 
 App({
   globalData: {
@@ -19,7 +23,6 @@ App({
   },
 
   checkAuth() {
-    // 检查是否已授权
     var authorized = wx.getStorageSync('authorized');
     var phone = wx.getStorageSync('phone');
     if (authorized && phone) {
@@ -31,7 +34,6 @@ App({
   },
 
   onLaunch() {
-    // 权限检查 - 未授权跳转到登录页
     if (!this.checkAuth()) {
       wx.reLaunch({
         url: '/pages/login/login'
@@ -41,42 +43,46 @@ App({
 
     var self = this;
     console.log('[App] Decompressing data...');
-    
-    // Show loading immediately
+
     wx.showLoading({ title: '数据加载中...', mask: true });
-    
-    // Use setTimeout to yield to UI thread
+
     setTimeout(function() {
       try {
-        // Decode base64 to ArrayBuffer
-        var buffer = wx.base64ToArrayBuffer(CompressedData);
-        var bytes = new Uint8Array(buffer);
-        
-        // Decompress gzip
-        var decompressed = pako.ungzip(bytes, { to: 'string' });
-        var rawData = JSON.parse(decompressed);
-        
-        // Store dictionaries
-        self.globalData.provinces = rawData.p || [];
-        self.globalData.cities = rawData.c || [];
-        self.globalData.counties = rawData.q || [];
-        self.globalData.types = rawData.t || [];
-        self.globalData.attrs = rawData.a || [];
-        
-        // Decode stations
+        var allRawStations = [];
+        var dicts = null;
+
+        for (var d = 0; d < CompressedDataList.length; d++) {
+          var buffer = wx.base64ToArrayBuffer(CompressedDataList[d]);
+          var bytes = new Uint8Array(buffer);
+          var decompressed = pako.ungzip(bytes, { to: 'string' });
+          var rawData = JSON.parse(decompressed);
+
+          if (!dicts) {
+            dicts = rawData;
+            self.globalData.provinces = rawData.p || [];
+            self.globalData.cities = rawData.c || [];
+            self.globalData.counties = rawData.q || [];
+            self.globalData.types = rawData.t || [];
+            self.globalData.attrs = rawData.a || [];
+          }
+
+          var s = rawData.s || [];
+          for (var i = 0; i < s.length; i++) {
+            allRawStations.push(s[i]);
+          }
+        }
+
+        console.log('[App] Total raw stations:', allRawStations.length);
+
         var stations = [];
-        var s = rawData.s || [];
-        for (var i = 0; i < s.length; i++) {
-          var station = s[i];
-          // Coords are * 1000000 for 6 decimal places
+        for (var i = 0; i < allRawStations.length; i++) {
+          var station = allRawStations[i];
           var damLat = station[5] ? station[5] / 1000000 : null;
           var damLng = station[6] ? station[6] / 1000000 : null;
           var factoryLat = station[7] ? station[7] / 1000000 : null;
           var factoryLng = station[8] ? station[8] / 1000000 : null;
-          // Primary coords for map: factory if available, else dam
           var lat = factoryLat || damLat;
           var lng = factoryLng || damLng;
-          // Capacity is * 10
           var capacity = station[10] ? station[10] / 10 : '';
           stations.push({
             id: String(station[0]),
@@ -97,17 +103,16 @@ App({
             phone: station[13] || ''
           });
         }
-        
+
         console.log('[App] Decompressed ' + stations.length + ' stations');
-        console.log('[App] First station:', stations[0]);
-        
+
         self.globalData.allStations = stations;
         self.globalData.dataReady = true;
-        
+
         wx.hideLoading();
-        
+
         if (self._onDataReady) self._onDataReady();
-        
+
       } catch (e) {
         wx.hideLoading();
         console.error('[App] Failed to decompress data:', e);
@@ -118,7 +123,6 @@ App({
   onDataLoadedWithLocation(lat, lng) {
     this.globalData.userLat = lat;
     this.globalData.userLng = lng;
-    console.log('[App] Location: ' + lat.toFixed(4) + ', ' + lng.toFixed(4));
     if (this._onDataReady) this._onDataReady();
   },
 
