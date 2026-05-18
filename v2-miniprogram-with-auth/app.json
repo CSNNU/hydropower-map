@@ -15,6 +15,5 @@
       "desc": "用于获取您的位置，显示附近的水电站"
     }
   },
-  "requiredPrivateInfos": ["getLocation"],
-  "style": "v2"
+  "requiredPrivateInfos": ["getLocation"]
 }
