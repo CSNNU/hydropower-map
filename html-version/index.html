@@ -2,10 +2,11 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>全国小水电站地图查询</title>
-<script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css" />
+<link rel="stylesheet" href="lib/leaflet.css" />
+<link rel="stylesheet" href="lib/MarkerCluster.css" />
+<link rel="stylesheet" href="lib/MarkerCluster.Default.css" />
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
 body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", sans-serif; }
@@ -13,212 +14,175 @@ body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft Ya
 #header {
   background: linear-gradient(135deg, #1a5276, #2e86c1);
   color: white;
-  padding: 16px 24px;
+  padding: 14px 24px;
   display: flex;
   align-items: center;
   gap: 12px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.15);
 }
 #header .logo { font-size: 28px; }
-#header h1 { font-size: 20px; font-weight: 600; }
-#header .subtitle { font-size: 13px; opacity: 0.8; }
+#header h1 { font-size: 18px; font-weight: 600; }
+#header .subtitle { font-size: 12px; opacity: 0.8; }
 
 #controls {
-  padding: 12px 24px;
+  padding: 10px 16px;
   background: #f0f4f8;
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  flex-wrap: wrap;
-}
-#controls .btn {
-  padding: 8px 16px;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 14px;
-  font-weight: 500;
-  transition: all 0.2s;
-}
-#controls .btn-primary {
-  background: #2e86c1;
-  color: white;
-}
-#controls .btn-primary:hover { background: #1a5276; }
-#controls .btn-secondary {
-  background: white;
-  color: #1a5276;
-  border: 1px solid #2e86c1;
-}
-#controls .btn-secondary:hover { background: #e8f0fe; }
-#controls .status {
-  font-size: 13px;
-  color: #555;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-#controls .status .dot {
-  width: 8px; height: 8px;
-  border-radius: 50%;
-  background: #27ae60;
-}
-#controls .status .dot.off { background: #e74c3c; }
-
-#radius-bar {
-  padding: 10px 24px;
-  background: white;
   display: flex;
   align-items: center;
   gap: 10px;
-  border-bottom: 1px solid #ddd;
+  flex-wrap: wrap;
 }
-#radius-bar label {
-  font-size: 14px;
-  color: #333;
+#controls .btn {
+  padding: 8px 14px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
   font-weight: 500;
 }
-#radius-bar input {
-  width: 80px;
-  padding: 8px 12px;
-  border: 1px solid #ccc;
-  border-radius: 6px;
-  font-size: 14px;
-  outline: none;
+#controls .btn-primary { background: #2e86c1; color: white; }
+#controls .btn-primary:hover { background: #1a5276; }
+#controls .btn-secondary { background: white; color: #1a5276; border: 1px solid #2e86c1; }
+#controls .status {
+  font-size: 12px; color: #555;
+  display: flex; align-items: center; gap: 4px;
 }
-#radius-bar input:focus { border-color: #2e86c1; }
-#radius-bar .btn { padding: 8px 14px; background: #2e86c1; color: white; border: none; border-radius: 6px; cursor: pointer; }
+#controls .dot { width: 8px; height: 8px; border-radius: 50%; background: #27ae60; }
+#controls .dot.off { background: #e74c3c; }
 
-#map-container {
-  height: calc(100vh - 180px);
-  width: 100%;
-  position: relative;
+#filter-bar {
+  padding: 10px 16px;
+  background: white;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-bottom: 1px solid #ddd;
 }
+#filter-bar input {
+  flex: 1; padding: 8px 12px;
+  border: 1px solid #ccc; border-radius: 6px;
+  font-size: 14px; outline: none;
+}
+#filter-bar input:focus { border-color: #2e86c1; }
+#filter-bar .btn { padding: 8px 14px; background: #2e86c1; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 13px; }
+
+#map-container { height: calc(100vh - 160px); width: 100%; position: relative; }
 #map { width: 100%; height: 100%; }
 
 #legend {
-  position: absolute;
-  bottom: 20px;
-  right: 20px;
-  background: white;
-  border-radius: 8px;
+  position: absolute; bottom: 20px; right: 20px;
+  background: white; border-radius: 8px;
   padding: 12px 16px;
   box-shadow: 0 2px 10px rgba(0,0,0,0.15);
-  z-index: 1000;
-  font-size: 13px;
+  z-index: 1000; font-size: 12px;
 }
-#legend .title { font-weight: 600; margin-bottom: 8px; color: #1a5276; }
-#legend .item { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
-#legend .icon { width: 12px; height: 12px; border-radius: 50%; }
+#legend .title { font-weight: 600; margin-bottom: 6px; color: #1a5276; }
+#legend .item { display: flex; align-items: center; gap: 6px; margin-bottom: 3px; }
+#legend .icon { width: 10px; height: 10px; border-radius: 50%; }
+
+#stats-bar {
+  position: absolute; top: 10px; right: 10px;
+  background: white; border-radius: 8px;
+  padding: 8px 14px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  z-index: 1000; font-size: 12px; color: #555;
+}
 
 #detail-panel {
-  position: absolute;
-  top: 10px;
-  left: 10px;
-  background: white;
-  border-radius: 10px;
+  position: absolute; top: 10px; left: 10px;
+  background: white; border-radius: 10px;
   padding: 16px 20px;
   box-shadow: 0 4px 20px rgba(0,0,0,0.2);
-  z-index: 1000;
-  width: 320px;
-  max-height: calc(100vh - 200px);
-  overflow-y: auto;
-  display: none;
+  z-index: 1000; width: 300px;
+  max-height: calc(100vh - 180px);
+  overflow-y: auto; display: none;
 }
 #detail-panel.active { display: block; }
 #detail-panel .close-btn {
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  width: 24px; height: 24px;
-  border-radius: 50%;
-  background: #eee;
-  border: none;
-  cursor: pointer;
-  font-size: 14px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  position: absolute; top: 8px; right: 8px;
+  width: 24px; height: 24px; border-radius: 50%;
+  background: #eee; border: none; cursor: pointer;
+  font-size: 14px; display: flex;
+  align-items: center; justify-content: center;
 }
-#detail-panel .close-btn:hover { background: #ddd; }
 #detail-panel .station-name {
-  font-size: 18px;
-  font-weight: 700;
-  color: #1a5276;
-  margin-bottom: 12px;
+  font-size: 16px; font-weight: 700;
+  color: #1a5276; margin-bottom: 10px;
   padding-right: 30px;
 }
 #detail-panel .info-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px;
+  display: grid; grid-template-columns: 1fr 1fr; gap: 6px;
 }
 #detail-panel .info-item {
-  background: #f0f4f8;
-  border-radius: 6px;
-  padding: 8px 10px;
+  background: #f0f4f8; border-radius: 6px; padding: 6px 8px;
 }
-#detail-panel .info-item .label {
-  font-size: 11px;
-  color: #888;
-  margin-bottom: 2px;
+#detail-panel .info-item .label { font-size: 10px; color: #888; margin-bottom: 2px; }
+#detail-panel .info-item .value { font-size: 13px; font-weight: 600; color: #333; }
+
+#detail-panel .coord-section {
+  margin-top: 10px; padding-top: 10px; border-top: 1px solid #eee;
 }
-#detail-panel .info-item .value {
-  font-size: 14px;
-  font-weight: 600;
-  color: #333;
+#detail-panel .coord-section .title {
+  font-weight: 600; font-size: 13px; color: #1a5276; margin-bottom: 6px;
+}
+#detail-panel .coord-row {
+  display: flex; align-items: center; gap: 6px;
+  padding: 4px 0; font-size: 12px; color: #555;
+}
+#detail-panel .coord-row a {
+  color: #2e86c1; text-decoration: none; margin-left: auto; font-size: 12px;
 }
 
-#stats-bar {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  background: white;
-  border-radius: 8px;
-  padding: 8px 14px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-  z-index: 1000;
-  font-size: 13px;
-  color: #555;
+#loading-overlay {
+  position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(255,255,255,0.9);
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  z-index: 9999;
 }
+.spinner {
+  width: 40px; height: 40px;
+  border: 4px solid #e0e0e0;
+  border-top-color: #2e86c1;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.loading-text { margin-top: 12px; font-size: 14px; color: #333; }
 
 @media (max-width: 768px) {
   #header { padding: 12px 16px; }
   #header h1 { font-size: 16px; }
-  #controls { padding: 10px 16px; }
-  #radius-bar { padding: 8px 16px; }
+  #controls { padding: 8px 12px; }
   #detail-panel { width: 260px; }
-  #map-container { height: calc(100vh - 160px); }
+  #map-container { height: calc(100vh - 140px); }
 }
 </style>
 </head>
 <body>
 
 <div id="header">
-  <span class="logo">⚡</span>
+  <span class="logo">&#9889;</span>
   <div>
     <h1>全国小水电站地图查询</h1>
-    <span class="subtitle">显示用户当前位置附近的水电站</span>
+    <span class="subtitle">共 47,991 个电站</span>
   </div>
 </div>
 
 <div id="controls">
-  <button class="btn btn-primary" onclick="locateUser()">📍 获取我的位置</button>
-  <button class="btn btn-secondary" onclick="resetMap()">🔄 重置地图</button>
+  <button class="btn btn-primary" onclick="locateUser()">&#128205; 获取我的位置</button>
+  <button class="btn btn-secondary" onclick="resetMap()">&#128260; 重置地图</button>
   <div class="status">
-    <span class="dot" id="loc-dot"></span>
+    <span class="dot off" id="loc-dot"></span>
     <span id="loc-text">未定位</span>
-  </div>
-  <div class="status">
-    <span id="count-text">共 0 个水电站</span>
   </div>
 </div>
 
-<div id="radius-bar">
-  <label>搜索半径：</label>
+<div id="filter-bar">
+  <label style="font-size:13px;color:#555;white-space:nowrap;">半径：</label>
   <input type="number" id="radius-input" value="50" min="1" max="1000" />
-  <span style="font-size:13px;color:#555">公里</span>
-  <button onclick="updateRadius()">刷新</button>
+  <span style="font-size:13px;color:#555;white-space:nowrap;">公里</span>
+  <button class="btn" onclick="updateRadius()">刷新</button>
 </div>
 
 <div id="map-container">
@@ -226,7 +190,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft Ya
 
   <div id="legend">
     <div class="title">图例</div>
-    <div class="item"><span class="icon" style="background:#27ae60"></span> 附近水电站</div>
+    <div class="item"><span class="icon" style="background:#27ae60"></span> 水电站</div>
     <div class="item"><span class="icon" style="background:#e74c3c"></span> 我的位置</div>
   </div>
 
@@ -235,52 +199,42 @@ body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft Ya
   </div>
 
   <div id="detail-panel">
-    <button class="close-btn" onclick="closeDetail()">✕</button>
+    <button class="close-btn" onclick="closeDetail()">&#10005;</button>
     <div class="station-name" id="panel-name"></div>
     <div class="info-grid" id="panel-grid"></div>
+    <div class="coord-section" id="panel-coords"></div>
   </div>
 </div>
 
+<div id="loading-overlay">
+  <div class="spinner"></div>
+  <div class="loading-text" id="loading-text">数据加载中...</div>
+</div>
+
+<script src="lib/leaflet.js"></script>
+<script src="lib/markercluster.js"></script>
 <script>
 let stations = [];
-let nearbyStations = [];
 let userMarker = null;
-let stationMarkers = null;
-let userLocation = null;
-let searchRadius = 50;
+let markersCluster = null;
+let userLat = null, userLng = null;
+let nearbyRadius = 50;
+let currentDetail = null;
 
-async function loadStations() {
-  document.getElementById('loc-text').textContent = '加载中...';
-  document.getElementById('loc-dot').className = 'dot off';
-  try {
-    const response = await fetch('stations.json');
-    stations = await response.json();
-    document.getElementById('count-text').textContent = '共 ' + stations.length + ' 个水电站';
-    document.getElementById('stats-text').textContent = '数据已加载，点击获取位置查看附近水电站';
-    console.log('Loaded', stations.length, 'stations');
-  } catch (e) {
-    document.getElementById('loc-text').textContent = '加载失败';
-    console.error('Failed to load stations:', e);
-    alert('数据加载失败，请确保 stations.json 文件存在且可通过 HTTP 访问。\n\n建议使用本地服务器打开：\nnpx serve .\n或\npython3 -m http.server 8080');
-  }
-}
-
-
-];
-
-
+// Init map
 const map = L.map('map').setView([35.0, 105.0], 5);
-
-L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}', {
-  attribution: '© OpenStreetMap contributors',
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  attribution: '&#169; OpenStreetMap',
   maxZoom: 18
 }).addTo(map);
 
-let userMarker = null;
-let nearbyMarkers = [];
-let userLat = null;
-let userLng = null;
-let nearbyRadius = 50;
+markersCluster = L.markerClusterGroup({
+  maxClusterRadius: 50,
+  spiderfyOnMaxZoom: true,
+  showCoverageOnHover: false,
+  zoomToBoundsOnClick: true
+});
+map.addLayer(markersCluster);
 
 function calcDistance(lat1, lng1, lat2, lng2) {
   const R = 6371;
@@ -289,40 +243,42 @@ function calcDistance(lat1, lng1, lat2, lng2) {
   const a = Math.sin(dLat/2) * Math.sin(dLat/2)
           + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180)
           * Math.sin(dLng/2) * Math.sin(dLng/2);
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-  return R * c;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+}
+
+async function loadStations() {
+  try {
+    const res = await fetch('stations.json');
+    stations = await res.json();
+    document.getElementById('loading-overlay').style.display = 'none';
+    console.log('Loaded', stations.length, 'stations');
+  } catch(e) {
+    document.getElementById('loading-text').textContent = '数据加载失败，请使用本地服务器打开';
+    console.error(e);
+  }
 }
 
 function locateUser() {
-  if (!navigator.geolocation) {
-    alert('您的浏览器不支持地理定位');
-    return;
-  }
-
+  if (!navigator.geolocation) { alert('浏览器不支持地理定位'); return; }
   document.getElementById('loc-text').textContent = '定位中...';
 
   navigator.geolocation.getCurrentPosition(
     (pos) => {
       userLat = pos.coords.latitude;
       userLng = pos.coords.longitude;
-
       if (userMarker) map.removeLayer(userMarker);
       userMarker = L.marker([userLat, userLng], {
         icon: L.divIcon({
-          className: 'user-icon',
+          className: '',
           html: '<div style="background:#e74c3c;width:16px;height:16px;border-radius:50%;border:3px solid white;box-shadow:0 2px 6px rgba(0,0,0,0.4)"></div>',
-          iconSize: [16, 16],
-          iconAnchor: [8, 8]
+          iconSize: [16, 16], iconAnchor: [8, 8]
         })
-      }).bindPopup('📍 我的当前位置');
+      });
       userMarker.addTo(map);
-
-      drawNearby();
-
       map.setView([userLat, userLng], 10);
-
+      drawNearby();
       document.getElementById('loc-dot').classList.remove('off');
-      document.getElementById('loc-text').textContent = `已定位 (${userLat.toFixed(4)}, ${userLng.toFixed(4)})`;
+      document.getElementById('loc-text').textContent = '已定位';
     },
     (err) => {
       document.getElementById('loc-dot').classList.add('off');
@@ -334,74 +290,73 @@ function locateUser() {
 
 function drawNearby() {
   if (userLat === null) return;
+  markersCluster.clearLayers();
 
-  nearbyMarkers.forEach(m => map.removeLayer(m));
-  nearbyMarkers = [];
+  let count = 0;
+  const nearby = [];
 
-  let nearbyCount = 0;
-
-  stations.forEach(s => {
+  for (let i = 0; i < stations.length; i++) {
+    const s = stations[i];
+    if (!s.lat || !s.lng) continue;
     const dist = calcDistance(userLat, userLng, s.lat, s.lng);
     if (dist <= nearbyRadius) {
-      nearbyCount++;
-      const marker = L.marker([s.lat, s.lng], {
-        icon: L.divIcon({
-          className: 'nearby-icon',
-          html: `<div style="background:#27ae60;width:14px;height:14px;border-radius:50%;border:3px solid white;box-shadow:0 2px 4px rgba(0,0,0,0.4)"></div>`,
-          iconSize: [14, 14],
-          iconAnchor: [7, 7]
-        })
-      }).bindPopup(`
-        <h3>${s.name}</h3>
-        <p>距离你：${dist.toFixed(1)} 公里</p>
-        <p>装机容量：${s.capacity}</p>
-        <p>类型：${s.type}</p>
-        <p>位置：${s.province} ${s.city} ${s.county}</p>
-        ${s.contact ? `<p>联系人：${s.contact}</p>` : ''}
-        ${s.phone ? `<p>电话：${s.phone}</p>` : ''}
-      `);
-
-      marker.on('click', () => showDetailPanel(s));
-      marker.addTo(map);
-      nearbyMarkers.push(marker);
+      count++;
+      nearby.push({ ...s, dist: dist });
     }
-  });
+  }
 
-  document.getElementById('count-text').textContent = `附近 ${nearbyRadius} 公里内：${nearbyCount} 个水电站`;
-  document.getElementById('stats-text').textContent = `附近 ${nearbyRadius} 公里内：${nearbyCount} 个水电站`;
+  // Sort by distance
+  nearby.sort((a, b) => a.dist - b.dist);
+
+  for (const s of nearby) {
+    const marker = L.marker([s.lat, s.lng], {
+      icon: L.divIcon({
+        className: '',
+        html: '<div style="background:#27ae60;width:12px;height:12px;border-radius:50%;border:2px solid white;box-shadow:0 1px 3px rgba(0,0,0,0.3)"></div>',
+        iconSize: [12, 12], iconAnchor: [6, 6]
+      })
+    });
+    marker.bindTooltip(s.name + ' (' + s.dist.toFixed(1) + 'km)', { direction: 'top' });
+    marker.on('click', () => showDetail(s));
+    markersCluster.addLayer(marker);
+  }
+
+  document.getElementById('stats-text').textContent = nearbyRadius + '公里内：' + count + '个电站';
 }
 
 function updateRadius() {
-  const newRadius = parseInt(document.getElementById('radius-input').value);
-  if (newRadius >= 1 && newRadius <= 1000) {
-    nearbyRadius = newRadius;
-    drawNearby();
+  const v = parseInt(document.getElementById('radius-input').value);
+  if (v >= 1 && v <= 1000) {
+    nearbyRadius = v;
+    if (userLat !== null) drawNearby();
   }
 }
 
-function showDetailPanel(s) {
+function showDetail(s) {
+  currentDetail = s;
   const panel = document.getElementById('detail-panel');
   panel.classList.add('active');
-
   document.getElementById('panel-name').textContent = s.name;
 
   const grid = document.getElementById('panel-grid');
-  grid.innerHTML = '';
+  grid.innerHTML = [
+    { label: '省份', value: s.province || '未知' },
+    { label: '城市', value: s.city || '未知' },
+    { label: '区县', value: s.county || '未知' },
+    { label: '装机容量', value: s.capacity ? s.capacity + ' kW' : '未知' },
+    { label: '开发方式', value: s.type || '未知' },
+    { label: '电站属性', value: s.attr || '未知' }
+  ].map(i => `<div class="info-item"><div class="label">${i.label}</div><div class="value">${i.value}</div></div>`).join('');
 
-  const infoItems = [
-    { label: '装机容量', value: s.capacity },
-    { label: '电站类型', value: s.type },
-    { label: '省份', value: s.province },
-    { label: '城市', value: s.city },
-    { label: '县', value: s.county },
-    { label: '经纬度', value: `${s.lat.toFixed(4)}, ${s.lng.toFixed(4)}` },
-    { label: '联系人', value: s.contact || '无' },
-    { label: '电话', value: s.phone || '无' },
-  ];
-
-  infoItems.forEach(item => {
-    grid.innerHTML += `<div class="info-item"><div class="label">${item.label}</div><div class="value">${item.value}</div></div>`;
-  });
+  const coords = document.getElementById('panel-coords');
+  let coordHTML = '<div class="title">坐标信息</div>';
+  if (s.dam_lat && s.dam_lng) {
+    coordHTML += `<div class="coord-row">&#127963; 坝址 ${s.dam_lat.toFixed(4)}, ${s.dam_lng.toFixed(4)} <a href="https://www.google.com/maps/dir/?api=1&destination=${s.dam_lat},${s.dam_lng}" target="_blank">导航</a></div>`;
+  }
+  if (s.factory_lat && s.factory_lng) {
+    coordHTML += `<div class="coord-row">&#127970; 厂房 ${s.factory_lat.toFixed(4)}, ${s.factory_lng.toFixed(4)} <a href="https://www.google.com/maps/dir/?api=1&destination=${s.factory_lat},${s.factory_lng}" target="_blank">导航</a></div>`;
+  }
+  coords.innerHTML = coordHTML;
 }
 
 function closeDetail() {
@@ -410,21 +365,18 @@ function closeDetail() {
 
 function resetMap() {
   if (userMarker) map.removeLayer(userMarker);
-  userMarker = null;
-  userLat = null;
-  userLng = null;
+  userMarker = null; userLat = null; userLng = null;
+  markersCluster.clearLayers();
   document.getElementById('loc-dot').classList.add('off');
   document.getElementById('loc-text').textContent = '未定位';
   document.getElementById('detail-panel').classList.remove('active');
   document.getElementById('radius-input').value = 50;
+  nearbyRadius = 50;
   document.getElementById('stats-text').textContent = '点击获取位置查看附近水电站';
   map.setView([35.0, 105.0], 5);
 }
+
+loadStations();
 </script>
 </body>
 </html>
-
-
-// Initial load
-loadStations();
-</script>
