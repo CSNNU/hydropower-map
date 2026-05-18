@@ -1,11 +1,10 @@
 var pako = require('./utils/pako.min.js');
 
-// 读取本地二进制gzip数据文件
-function readGzipFile(path) {
-  var fs = wx.getFileSystemManager();
-  var data = fs.readFileSync(path);
-  return data;
-}
+var CompressedData1 = require('./data/data1.js');
+var CompressedData2 = require('./data/data2.js');
+var CompressedData3 = require('./data/data3.js');
+var CompressedData4 = require('./data/data4.js');
+var CompressedDataList = [CompressedData1, CompressedData2, CompressedData3, CompressedData4];
 
 App({
   globalData: {
@@ -29,16 +28,16 @@ App({
     setTimeout(function() {
       try {
         var allRawStations = [];
-        var dataPath = wx.env.USER_DATA_PATH; // 不使用，直接用相对路径
+        var dicts = null;
 
-        // 读取并解压所有数据文件
-        for (var d = 1; d <= 4; d++) {
-          var filePath = './data/data' + d + '.gz';
-          var buffer = readGzipFile(filePath);
-          var decompressed = pako.ungzip(buffer, { to: 'string' });
+        for (var d = 0; d < CompressedDataList.length; d++) {
+          var buffer = wx.base64ToArrayBuffer(CompressedDataList[d]);
+          var bytes = new Uint8Array(buffer);
+          var decompressed = pako.ungzip(bytes, { to: 'string' });
           var rawData = JSON.parse(decompressed);
 
-          if (d === 1) {
+          if (!dicts) {
+            dicts = rawData;
             self.globalData.provinces = rawData.p || [];
             self.globalData.cities = rawData.c || [];
             self.globalData.counties = rawData.q || [];
@@ -75,9 +74,8 @@ App({
             factory_lat: factoryLat, factory_lng: factoryLng,
             type: self.globalData.types[station[9]] || '',
             capacity: capacity,
-            attr: self.globalData.attrs[station[11]] || '',
-            contact: station[12] || '',
-            phone: station[13] || ''
+            attr: self.globalData.attrs[station[10]] || ''
+            // v1 无电话权限版本：不含 contact/phone
           });
         }
 
